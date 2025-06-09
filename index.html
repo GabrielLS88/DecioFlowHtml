@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="pt">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Optional JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+        integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+        integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+        crossorigin="anonymous"></script>
+
+    <script src="https://unpkg.com/blip-chat-extension@1.0.4" type="text/javascript"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <title>Formulário de Evento</title>
+</head>
+
+<body style="padding: 0; margin: 0; box-sizing: border-box;">
+    <div id="container" style="padding: 20px; max-width: 600px; margin: auto; font-family: Poppins, sans-serif;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img style="width: 100px; height: auto; border-radius: 10px;"
+                src="https://media.licdn.com/dms/image/v2/D4D0BAQGj8dZTp-NAXg/company-logo_200_200/company-logo_200_200/0/1686845613996/grupodecio_logo?e=2147483647&v=beta&t=WFOIVsWfLElRjlkEmgb3EdJW4jpmk46lR4XhF4_ayt8"
+                alt="Logo">
+        </div>
+        <p>Para trocar a sua senha do aplicativo preencha as informações abaixo:</p>
+
+        <form id="event-form">
+            <input type="text" placeholder="CPF ou CNPJ" id="documento" name="documento" class="form-control mb-2"
+                style="border-color: black; color: black; height: 40px;" required>
+            <p style="font-size: 12px; margin-left: 10px; font-weight: 300;">* Informe seu CPF ou CNPJ</p>
+
+            <div class="input-group mb-2">
+                <input type="password" placeholder="Nova senha" id="senha" name="senha" class="form-control"
+                    style="border-color: black; color: black;" required>
+                <div class="input-group-append">
+                    <button type="button" id="togglePassword" class="btn btn-outline-secondary">
+                        <i id="togglePasswordIcon" class="bi bi-eye-fill"></i>
+                    </button>
+                </div>
+            </div>
+            <p style="font-size: 12px; margin-left: 10px; font-weight: 300;">* Digite sua nova senha</p>
+
+            <div style="display: flex; align-items: center; font-size: 12px; font-weight: 300;">
+                <input type="checkbox" style="margin-right: 10px; cursor: pointer;"> (Opcional) Confirmar alteração
+                por
+                e-mail
+            </div>
+
+            <button id="button" type="button" class="btn btn-block"
+                style="color: #fff; background-color: #1241C5; margin-top: 15px; border-radius: 20px; transition: 0.3s ease-in-out;"
+                disabled>Enviar</button>
+        </form>
+    </div>
+
+    <script>
+        // Função para validar CPF ou CNPJ
+        function validarDocumento(documento) {
+            const cpfCnpj = documento.replace(/\D/g, '');
+
+            // Validação de CPF
+            if (cpfCnpj.length === 11) {
+                let soma = 0;
+                let resto;
+
+                for (let i = 1; i <= 9; i++) soma += parseInt(cpfCnpj.substring(i - 1, i)) * (11 - i);
+                resto = (soma * 10) % 11;
+                if (resto === 10 || resto === 11) resto = 0;
+                if (resto !== parseInt(cpfCnpj.substring(9, 10))) return false;
+
+                soma = 0;
+                for (let i = 1; i <= 10; i++) soma += parseInt(cpfCnpj.substring(i - 1, i)) * (12 - i);
+                resto = (soma * 10) % 11;
+                if (resto === 10 || resto === 11) resto = 0;
+                if (resto !== parseInt(cpfCnpj.substring(10, 11))) return false;
+
+                return true;
+            }
+
+            // Validação de CNPJ
+            if (cpfCnpj.length === 14) {
+                let tamanho = cpfCnpj.length - 2;
+                let numeros = cpfCnpj.substring(0, tamanho);
+                let digitos = cpfCnpj.substring(tamanho);
+                let soma = 0;
+                let pos = tamanho - 7;
+
+                for (let i = tamanho; i >= 1; i--) {
+                    soma += numeros.charAt(tamanho - i) * pos--;
+                    if (pos < 2) pos = 9;
+                }
+
+                let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+                if (resultado != digitos.charAt(0)) return false;
+
+                tamanho = tamanho + 1;
+                numeros = cpfCnpj.substring(0, tamanho);
+                soma = 0;
+                pos = tamanho - 7;
+
+                for (let i = tamanho; i >= 1; i--) {
+                    soma += numeros.charAt(tamanho - i) * pos--;
+                    if (pos < 2) pos = 9;
+                }
+
+                resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+                if (resultado != digitos.charAt(1)) return false;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        // Alternar exibição da senha
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const senhaInput = document.getElementById('senha');
+            const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+
+            if (senhaInput.type === 'password') {
+                senhaInput.type = 'text';
+                togglePasswordIcon.classList.remove('bi-eye-fill');
+                togglePasswordIcon.classList.add('bi-eye-slash-fill');
+            } else {
+                senhaInput.type = 'password';
+                togglePasswordIcon.classList.remove('bi-eye-slash-fill');
+                togglePasswordIcon.classList.add('bi-eye-fill');
+            }
+        });
+
+        // Validação em tempo real
+        document.getElementById('documento').addEventListener('input', function () {
+            const documentoInput = this;
+            const enviarBotao = document.getElementById('button');
+
+            if (validarDocumento(documentoInput.value)) {
+                documentoInput.style.borderColor = 'green';
+                enviarBotao.disabled = false;
+                enviarBotao.style.cursor = "block";
+            } else {
+                documentoInput.style.borderColor = 'red';
+                enviarBotao.disabled = true;
+            }
+        });
+
+        document.getElementById('button').addEventListener('click', function () {
+            const form = document.getElementById('event-form');
+            const formData = new FormData(form);
+            const dataObject = {};
+
+            formData.forEach((value, key) => {
+                dataObject[key] = value;
+            });
+
+            
+            const checkBox = form.querySelector('input[type="checkbox"]');
+            dataObject.envioEmail = checkBox.checked; // true se marcado, false se não
+
+            console.log(dataObject);
+
+            const webView = new BlipChatExtension();
+            webView.sendMessage({
+                payload: {
+                    type: "text/plain",
+                    content: JSON.stringify(dataObject),
+                },
+                preview: {
+                    type: "text/plain",
+                    content: "Dados enviados com sucesso",
+                },
+            });
+
+            webView.closeWebView();
+        });
+
+    </script>
+</body>
+
+</html>
